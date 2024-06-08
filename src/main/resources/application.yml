@@ -17,15 +17,15 @@ spring:
 ## Queue Config
 rabbitmq:
   exchange:
-    request: request-exchange
-    response: response-exchange
+    request: ${RABBIT_EXCHANGE_REQ}
+    response: ${RABBIT_EXCHANGE_RES}
   queue:
-    plan-processing: plan-processing-queue
-    plan-response: plan-response-queue
-    billing-processing: billing-processing-queue
-    billing-response: billing-response-queue
+    plan-processing: ${RABBIT_QUEUE_PLAN_P}
+    plan-response: ${RABBIT_QUEUE_PLAN_R}
+    billing-processing: ${RABBIT_QUEUE_BILLING_P}
+    billing-response: ${RABBIT_QUEUE_BILLING_R}
   routing-key:
-    plan-processing: plan.processing
-    plan-response: plan.response
-    billing-processing: billing.processing
-    billing-response: billing.response
+    plan-processing: ${RABBIT_RK_PLAN_P}
+    plan-response: ${RABBIT_RK_PLAN_R}
+    billing-processing: ${RABBIT_RK_BILLING_P}
+    billing-response: ${RABBIT_RK_BILLING_R}

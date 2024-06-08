@@ -1,0 +1,31 @@
+## Server Config
+server:
+  port: 8090
+
+## Spring Config
+spring:
+
+  ## RabbitMQ Config
+  rabbitmq:
+    host: ${RABBIT_HOST}
+    port: ${RABBIT_PORT}
+    username: ${RABBIT_USERNAME}
+    password: ${RABBIT_PASSWORD}
+    virtual-host: ${RABBIT_VIRTUAL_HOST}
+    dynamic: false
+
+## Queue Config
+rabbitmq:
+  exchange:
+    request: request-exchange
+    response: response-exchange
+  queue:
+    plan-processing: plan-processing-queue
+    plan-response: plan-response-queue
+    billing-processing: billing-processing-queue
+    billing-response: billing-response-queue
+  routing-key:
+    plan-processing: plan.processing
+    plan-response: plan.response
+    billing-processing: billing.processing
+    billing-response: billing.response

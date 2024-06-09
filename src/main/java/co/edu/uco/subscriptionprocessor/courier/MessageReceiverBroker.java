@@ -1,7 +1,9 @@
 package co.edu.uco.subscriptionprocessor.courier;
 
+import co.edu.uco.subscriptionprocessor.domain.billing.BillingProcess;
 import co.edu.uco.subscriptionprocessor.domain.plan.PlanListMessage;
 import co.edu.uco.subscriptionprocessor.service.plan.PlanService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +39,12 @@ public class MessageReceiverBroker {
 
     @RabbitListener(queues = "${rabbitmq.queue.billing-processing}")
     public void processBillingMessage(String message) {
-        System.out.println("Received billing message: " + message);
-        // TODO process message
+        try {
+            System.out.println("Received billing message: " + message);
+            BillingProcess receivedMessage = objectMapper.readValue(message, BillingProcess.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     public Object getLastReceivedMessage() {

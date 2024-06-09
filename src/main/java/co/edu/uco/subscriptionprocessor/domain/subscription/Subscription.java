@@ -8,6 +8,7 @@ public class Subscription {
     private UUID id;
     private UUID userId;
     private UUID planId;
+    private UUID periodId;
     private String status;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
@@ -34,6 +35,14 @@ public class Subscription {
 
     public void setPlanId(UUID planId) {
         this.planId = planId;
+    }
+
+    public UUID getPeriodId() {
+        return periodId;
+    }
+
+    public void setPeriodId(UUID periodId) {
+        this.periodId = periodId;
     }
 
     public String getStatus() {
@@ -66,6 +75,7 @@ public class Subscription {
                 "id=" + id +
                 ", userId=" + userId +
                 ", planId=" + planId +
+                ", periodId=" + periodId +
                 ", status='" + status + '\'' +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +

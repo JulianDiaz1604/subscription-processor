@@ -7,6 +7,7 @@ public class Period {
     private UUID id;
     private String name;
     private double discount;
+    private int months;
 
     public UUID getId() {
         return id;
@@ -32,12 +33,21 @@ public class Period {
         this.discount = discount;
     }
 
+    public int getMonths() {
+        return months;
+    }
+
+    public void setMonths(int months) {
+        this.months = months;
+    }
+
     @Override
     public String toString() {
         return "Period{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", discount='" + discount + '\'' +
+                ", discount=" + discount +
+                ", months=" + months +
                 '}';
     }
 

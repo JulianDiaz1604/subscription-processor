@@ -20,6 +20,10 @@ import java.net.URL;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import javax.mail.*;
+import javax.mail.internet.*;
+import javax.activation.*;
+import java.util.Properties;
 
 @Service
 public class BillingServiceImpl implements BillingService {
@@ -71,7 +75,8 @@ public class BillingServiceImpl implements BillingService {
                 parameters.put("dueDate", subscription.getEndDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(report, parameters);
-                JasperExportManager.exportReportToPdfFile(jasperPrint, "C:/Users/diazj/OneDrive/Documentos/UCO/Software 3/facturas/" + person.getName() + ".pdf");
+                filePath = "C:/Users/diazj/OneDrive/Documentos/UCO/Software 3/facturas/" + person.getName() + ".pdf";
+                JasperExportManager.exportReportToPdfFile(jasperPrint, filePath);
 
                 logo.close();
                 qr.close();
@@ -95,6 +100,63 @@ public class BillingServiceImpl implements BillingService {
 
         return filePath;
 
+    }
+
+    @Override
+    public void sendEmailWithAttachment(Person mailRecipient, String filePath) {
+
+        final String username = "postmaster@sandboxf6767588b694487787fe8511f4dddc8b.mailgun.org";
+        final String password = "4fe363e49f107e774ddbf4fcf8e887b0-51356527-269d5abc";
+
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp.mailgun.org");
+        props.put("mail.smtp.port", "587");
+
+        Session session = Session.getInstance(props,
+                new javax.mail.Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(username, password);
+                    }
+                });
+
+        try {
+
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(username));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mailRecipient.getEmail()));
+            message.setSubject(createMailSubject(mailRecipient));
+
+            MimeBodyPart messageBodyPart = new MimeBodyPart();
+            messageBodyPart.setText(createMailBody(mailRecipient));
+
+            MimeBodyPart attachmentBodyPart = new MimeBodyPart();
+            DataSource source = new FileDataSource(filePath);
+            attachmentBodyPart.setDataHandler(new DataHandler(source));
+            attachmentBodyPart.setFileName("bill.pdf");
+
+            Multipart multipart = new MimeMultipart();
+            multipart.addBodyPart(messageBodyPart);
+            multipart.addBodyPart(attachmentBodyPart);
+
+            message.setContent(multipart);
+
+            Transport.send(message);
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private String createMailSubject(Person person) {
+        return person.getName() + " we have generated your invoice.";
+    }
+
+    private String createMailBody(Person person) {
+        return person.getName() + " " + person.getLastName() + " you have received an electronic invoice.\n" +
+                "\nAttached to this email you will find the document.";
     }
 
 }

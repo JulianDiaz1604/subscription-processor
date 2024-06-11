@@ -37,9 +37,11 @@ dependencies {
 	implementation 'com.google.code.gson:gson:2.10.1'
 
 	//JasperReports
-//	implementation 'com.lowagie:itext:2.1.7'
 	implementation 'net.sf.jasperreports:jasperreports:6.21.3'
 	implementation 'net.sf.jasperreports:jasperreports-fonts:6.21.3'
+
+	//Mail
+	implementation 'com.sun.mail:javax.mail:1.6.2'
 
 }
 

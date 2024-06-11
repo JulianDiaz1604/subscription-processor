@@ -2,6 +2,7 @@ package co.edu.uco.subscriptionprocessor.courier;
 
 import co.edu.uco.subscriptionprocessor.domain.billing.BillingProcess;
 import co.edu.uco.subscriptionprocessor.domain.plan.PlanListMessage;
+import co.edu.uco.subscriptionprocessor.service.billing.BillingService;
 import co.edu.uco.subscriptionprocessor.service.plan.PlanService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +17,9 @@ public class MessageReceiverBroker {
 
     @Autowired
     private PlanService planService;
+
+    @Autowired
+    private BillingService billingService;
 
     @Autowired
     private MessageSenderBroker messageSenderBroker;
@@ -42,6 +46,7 @@ public class MessageReceiverBroker {
         try {
             System.out.println("Received billing message: " + message);
             BillingProcess receivedMessage = objectMapper.readValue(message, BillingProcess.class);
+            String billPath = billingService.createPdfBilling(receivedMessage);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

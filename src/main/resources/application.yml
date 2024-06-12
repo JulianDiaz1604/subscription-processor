@@ -50,8 +50,8 @@ mail:
       auth: ${MAIL_SMTP_AUTH}
       start-tls: ${MAIL_SMTP_START_TLS}
       host: ${MAIL_HOST}
-      port: ${MAIL_CONTENT_PORT}
+      port: ${MAIL_PORT}
   message:
     content:
       file:
-        pdf: ${MAIL_PDF_NAME}
+        pdf: ${MAIL_CONTENT_PDF_NAME}

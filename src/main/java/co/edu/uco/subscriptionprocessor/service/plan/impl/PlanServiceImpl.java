@@ -6,7 +6,6 @@ import co.edu.uco.subscriptionprocessor.service.plan.PlanService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class PlanServiceImpl implements PlanService {

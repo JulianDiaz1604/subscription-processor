@@ -29,3 +29,29 @@ rabbitmq:
     plan-response: ${RABBIT_RK_PLAN_R}
     billing-processing: ${RABBIT_RK_BILLING_P}
     billing-response: ${RABBIT_RK_BILLING_R}
+
+## PDF Billing Config
+billing:
+  resources:
+    paths:
+      img:
+        logo: ${BILLING_LOGO}
+        qr: ${BILLING_QR}
+      pdf:
+        template: ${BILLING_TEMPLATE}
+        save-folder: ${BILLING_FOLDER}
+
+## Mail Config
+mail:
+  properties:
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    smtp:
+      auth: ${MAIL_SMTP_AUTH}
+      start-tls: ${MAIL_SMTP_START_TLS}
+      host: ${MAIL_HOST}
+      port: ${MAIL_PORT}
+  message:
+    content:
+      file:
+        pdf: ${MAIL_CONTENT_PDF_NAME}

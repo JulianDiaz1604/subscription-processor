@@ -10,6 +10,12 @@ public class Billing {
     private LocalDateTime dueDate;
     private UUID subscriptionId;
 
+    public Billing(double amount, LocalDateTime emissionDate, LocalDateTime dueDate, UUID subscriptionId) {
+        this.amount = amount;
+        this.emissionDate = emissionDate;
+        this.dueDate = dueDate;
+        this.subscriptionId = subscriptionId;
+    }
 
     public UUID getId() {
         return id;
@@ -61,4 +67,5 @@ public class Billing {
                 ", subscriptionId=" + subscriptionId +
                 '}';
     }
+
 }

@@ -1,5 +1,7 @@
 package co.edu.uco.subscriptionprocessor.service.billing.impl;
 
+import co.edu.uco.subscriptionprocessor.courier.MessageSenderBroker;
+import co.edu.uco.subscriptionprocessor.domain.billing.Billing;
 import co.edu.uco.subscriptionprocessor.domain.billing.BillingProcess;
 import co.edu.uco.subscriptionprocessor.domain.period.Period;
 import co.edu.uco.subscriptionprocessor.domain.person.Person;
@@ -12,9 +14,9 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.util.JRLoader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.ServletContext;
 import java.io.InputStream;
 import java.net.URL;
 import java.time.format.DateTimeFormatter;
@@ -23,13 +25,47 @@ import java.util.Map;
 import javax.mail.*;
 import javax.mail.internet.*;
 import javax.activation.*;
+import java.util.Objects;
 import java.util.Properties;
 
 @Service
 public class BillingServiceImpl implements BillingService {
 
     @Autowired
-    private ServletContext servletContext;
+    private MessageSenderBroker messageSenderBroker;
+
+    @Value("${billing.resources.paths.img.logo}")
+    private String logoPath;
+
+    @Value("${billing.resources.paths.img.qr}")
+    private String qrPath;
+
+    @Value("${billing.resources.paths.pdf.template}")
+    private String reportTemplatePath;
+
+    @Value("${billing.resources.paths.pdf.save-folder}")
+    private String pdfSaveFolder;
+
+    @Value("${mail.properties.username}")
+    private String emailUser;
+
+    @Value("${mail.properties.password}")
+    private String emailPassword;
+
+    @Value("${mail.properties.smtp.auth}")
+    private String smtpAuth;
+
+    @Value("${mail.properties.smtp.start-tls}")
+    private String smtpStartTls;
+
+    @Value("${mail.properties.smtp.host}")
+    private String smtpHost;
+
+    @Value("${mail.properties.smtp.port}")
+    private String smtpPort;
+
+    @Value("${mail.message.content.file.pdf}")
+    private String attachedBillName;
 
     @Override
     public String createPdfBilling(BillingProcess billingProcess) {
@@ -43,20 +79,17 @@ public class BillingServiceImpl implements BillingService {
 
         try {
 
-            String logoPath = "/billing/templates/img/full_logo_billing.png";
-            String qrPath = "/billing/templates/img/qr.png";
-            String reportTemplatePath = "/billing/templates/BillingServiceImpl.jasper";
-
             URL logoUrl = getClass().getResource(logoPath);
             URL qrUrl = getClass().getResource(qrPath);
             URL reportTemplateUrl = getClass().getResource(reportTemplatePath);
 
-            if (logoUrl != null && qrUrl != null && reportTemplateUrl != null) {
-                InputStream logo = getClass().getResourceAsStream(logoPath);
-                InputStream qr = getClass().getResourceAsStream(qrPath);
-                InputStream reportTemplate = getClass().getResourceAsStream(reportTemplatePath);
+            InputStream logo = getClass().getResourceAsStream(logoPath);
+            InputStream qr = getClass().getResourceAsStream(qrPath);
+            InputStream reportTemplate = getClass().getResourceAsStream(reportTemplatePath);
 
-                JasperReport report = (JasperReport) JRLoader.loadObject(getClass().getResource(reportTemplatePath));
+            if (logo != null && qr != null && reportTemplate != null) {
+
+                JasperReport report = (JasperReport) JRLoader.loadObject(Objects.requireNonNull(getClass().getResource(reportTemplatePath)));
 
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put("fullLogoBilling", logo);
@@ -72,17 +105,21 @@ public class BillingServiceImpl implements BillingService {
                 parameters.put("startDate", subscription.getStartDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
                 parameters.put("endDate", subscription.getEndDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
                 parameters.put("amount", amount);
-                parameters.put("dueDate", subscription.getEndDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+                parameters.put("dueDate", subscription.getStartDate().plusDays(10).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(report, parameters);
-                filePath = "C:/Users/diazj/OneDrive/Documentos/UCO/Software 3/facturas/" + person.getName() + ".pdf";
+                filePath = pdfSaveFolder + person.getId() + ".pdf";
                 JasperExportManager.exportReportToPdfFile(jasperPrint, filePath);
 
                 logo.close();
                 qr.close();
                 reportTemplate.close();
 
+                Billing billing = new Billing(amount, subscription.getStartDate(), subscription.getStartDate().plusDays(10), subscription.getId());
+                messageSenderBroker.sendBillingResponseMessage(billing);
+
             } else {
+
                 if (logoUrl == null) {
                     System.out.println("Logo not found at " + logoPath);
                 }
@@ -92,10 +129,11 @@ public class BillingServiceImpl implements BillingService {
                 if (reportTemplateUrl == null) {
                     System.out.println("Report template not found at " + reportTemplatePath);
                 }
+
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
         return filePath;
@@ -105,26 +143,23 @@ public class BillingServiceImpl implements BillingService {
     @Override
     public void sendEmailWithAttachment(Person mailRecipient, String filePath) {
 
-        final String username = "postmaster@sandboxf6767588b694487787fe8511f4dddc8b.mailgun.org";
-        final String password = "4fe363e49f107e774ddbf4fcf8e887b0-51356527-269d5abc";
-
         Properties props = new Properties();
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.host", "smtp.mailgun.org");
-        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.auth", smtpAuth);
+        props.put("mail.smtp.starttls.enable", smtpStartTls);
+        props.put("mail.smtp.host", smtpHost);
+        props.put("mail.smtp.port", smtpPort);
 
         Session session = Session.getInstance(props,
                 new javax.mail.Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password);
+                        return new PasswordAuthentication(emailUser, emailPassword);
                     }
                 });
 
         try {
 
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(username));
+            message.setFrom(new InternetAddress(emailUser));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mailRecipient.getEmail()));
             message.setSubject(createMailSubject(mailRecipient));
 
@@ -134,7 +169,7 @@ public class BillingServiceImpl implements BillingService {
             MimeBodyPart attachmentBodyPart = new MimeBodyPart();
             DataSource source = new FileDataSource(filePath);
             attachmentBodyPart.setDataHandler(new DataHandler(source));
-            attachmentBodyPart.setFileName("bill.pdf");
+            attachmentBodyPart.setFileName(attachedBillName);
 
             Multipart multipart = new MimeMultipart();
             multipart.addBodyPart(messageBodyPart);
@@ -145,7 +180,7 @@ public class BillingServiceImpl implements BillingService {
             Transport.send(message);
 
         } catch (MessagingException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
     }

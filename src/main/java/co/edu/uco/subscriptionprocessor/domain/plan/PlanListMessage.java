@@ -30,4 +30,5 @@ public class PlanListMessage {
                 ", planList=" + planList +
                 '}';
     }
+
 }
